@@ -1,0 +1,6 @@
+Name of Quantlet: 'Quantlets as NFT'
+Published in: 'Quantlet Universe'
+Description: 'Upload your Code as an NFT on the Algorand Platform'
+Keywords: Quantlet, NFT, Algorand, Code, Testnet
+Author: Julian Winkel
+Submitted: 20211221
