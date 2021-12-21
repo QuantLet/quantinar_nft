@@ -41,7 +41,7 @@ def create_non_fungible_token():
   # params.flat_fee = True
     
   # JSON file
-  f = open ('aliceNFTmetadata.json', "r")
+  f = open ('quantletNFTmetadata.json', "r")
   
   # Reading from file
   metadataJSON = json.loads(f.read())
@@ -60,14 +60,14 @@ def create_non_fungible_token():
       sp=params,
       total=1,
       default_frozen=False,
-      unit_name="ALICE001",
-      asset_name="Alice's Artwork 001",
+      unit_name="q1",
+      asset_name="BitcoinPricingKernels",
       manager=accounts[1]['pk'],
       reserve=None,
       freeze=None,
       clawback=None,
       strict_empty_address_check=False,
-      url="https://path/to/my/asset/details", 
+      url="https://github.com/QuantLet/BitcoinPricingKernels/tree/master/BitcoinPricingKernels", 
       metadata_hash=json_metadata_hash,
       decimals=0)
 

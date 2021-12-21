@@ -1,0 +1,25 @@
+{
+    "name": "bb",
+    "description": "bb",
+    "image": "https://github.com/QuantLet/BitcoinPricingKernels/blob/master/BitcoinPricingKernels/BitcoinPricingKernelsQR.png",
+    "image_integrity": "sha256-/tih/7ew0eziEZIVD4qoTWb0YrElAuRG3b40SnEstyk=",
+    "properties": {
+        "simple_property": "bb",
+        "rich_property": {
+            "name": "bb",
+            "value": "001",
+            "display_value": "001",
+            "class": "emphasis",
+            "css": {
+                "color": "#ffffff",
+                "font-weight": "bold",
+                "text-decoration": "underline"
+            }
+        },
+        "array_property": {
+            "name": "bb",
+            "value": [1, 2, 3, 4],
+            "class": "emphasis"
+        }
+    }
+}
