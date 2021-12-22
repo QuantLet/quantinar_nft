@@ -1,19 +1,28 @@
 import json
 import hashlib
+import csv
 from algosdk import mnemonic
 from algosdk.v2client import algod
 from algosdk.future.transaction import AssetConfigTxn
 from createAccount import create_account
 from closeoutAccount import closeout_account
+from qr import gen_qr
 import pdb
 
-def create_non_fungible_token():
+def create_non_fungible_token(_asset_name, _url, _destroy_asset = False, _append_file = True, _generate_qr = True):
   """
   hash = hashlib.new("sha512_256")
   hash.update(b"arc0003/amj")
   hash.update(metadataStr.encode("utf-8"))
   json_metadata_hash = hash.digest()
   """
+  
+  if _generate_qr:
+    # Generate QR 
+    print('Generating QR')
+    qr_fname = str(_asset_name) + 'NFT'
+    gen_qr(qr_fname, _url, qr_fname)
+
   # For ease of reference, add account public and private keys to
   # an accounts dict.
   print("--------------------------------------------")
@@ -41,10 +50,35 @@ def create_non_fungible_token():
   # params.flat_fee = True
     
   # JSON file
-  f = open ('quantletNFTmetadata.json', "r")
+  #f = open ('quantletNFTmetadata.json', "r")
+  metadataJSON =  {
+        "name": "bb",
+        "description": "bb",
+        "image": qr_fname,
+        "image_integrity": "sha256-/tih/7ew0eziEZIVD4qoTWb0YrElAuRG3b40SnEstyk=",
+        "properties": {
+            "simple_property": "bb",
+            "rich_property": {
+                "name": "bb",
+                "value": "001",
+                "display_value": "001",
+                "class": "emphasis",
+                "css": {
+                    "color": "#ffffff",
+                    "font-weight": "bold",
+                    "text-decoration": "underline"
+                }
+            },
+            "array_property": {
+                "name": "bb",
+                "value": [1, 2, 3, 4],
+                "class": "emphasis"
+            }
+        }
+    }
   
   # Reading from file
-  metadataJSON = json.loads(f.read())
+  #metadataJSON = json.loads(f.read())
   metadataStr = json.dumps(metadataJSON)
 
   m = hashlib.sha256()
@@ -61,13 +95,13 @@ def create_non_fungible_token():
       total=1,
       default_frozen=False,
       unit_name="q1",
-      asset_name="BitcoinPricingKernels",
+      asset_name=_asset_name,
       manager=accounts[1]['pk'],
       reserve=None,
       freeze=None,
       clawback=None,
       strict_empty_address_check=False,
-      url="https://github.com/QuantLet/BitcoinPricingKernels/tree/master/BitcoinPricingKernels", 
+      url=_url, 
       metadata_hash=json_metadata_hash,
       decimals=0)
 
@@ -98,41 +132,48 @@ def create_non_fungible_token():
   except Exception as e:
       print(e)
 
+  if _destroy_asset:
 
+    print("--------------------------------------------")
+    print("You have successfully created your own Non-fungible token! For the purpose of the demo, we will now delete the asset.")
+    print("Deleting Asset...")
 
-  print("--------------------------------------------")
-  print("You have successfully created your own Non-fungible token! For the purpose of the demo, we will now delete the asset.")
-  print("Deleting Asset...")
+    # Asset destroy transaction
+    txn = AssetConfigTxn(
+        sender=accounts[1]['pk'],
+        sp=params,
+        index=asset_id,
+        strict_empty_address_check=False
+        )
 
-  pdb.set_trace()
+    # Sign with secret key of creator
+    stxn = txn.sign(accounts[1]['sk'])
+    # Send the transaction to the network and retrieve the txid.
+    txid = algod_client.send_transaction(stxn)
+    print("Asset Destroy Transaction ID: {}".format(txid))
+    # Wait for the transaction to be confirmed
+    wait_for_confirmation(algod_client, txid, 4)
 
-  # Asset destroy transaction
-  txn = AssetConfigTxn(
-      sender=accounts[1]['pk'],
-      sp=params,
-      index=asset_id,
-      strict_empty_address_check=False
-      )
+    # Asset was deleted.
+    try:
+        print_asset_holding(algod_client, accounts[1]['pk'], asset_id)
+        print_created_asset(algod_client, accounts[1]['pk'], asset_id)
+        print("Asset is deleted.")
+    except Exception as e:
+        print(e)
+    
+    print("--------------------------------------------")
+    print("Sending closeout transaction back to the testnet dispenser...")
+    closeout_account(accounts[1]["pk"], accounts[1]["sk"], algod_client)
 
-  # Sign with secret key of creator
-  stxn = txn.sign(accounts[1]['sk'])
-  # Send the transaction to the network and retrieve the txid.
-  txid = algod_client.send_transaction(stxn)
-  print("Asset Destroy Transaction ID: {}".format(txid))
-  # Wait for the transaction to be confirmed
-  wait_for_confirmation(algod_client, txid, 4)
+  if _append_file:
+      print('Appending Asset Link to File')
+      fields=[_asset_name, _url, asset_link]
+      with open(r'assets.csv', 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)
 
-  # Asset was deleted.
-  try:
-      print_asset_holding(algod_client, accounts[1]['pk'], asset_id)
-      print_created_asset(algod_client, accounts[1]['pk'], asset_id)
-      print("Asset is deleted.")
-  except Exception as e:
-      print(e)
-  
-  print("--------------------------------------------")
-  print("Sending closeout transaction back to the testnet dispenser...")
-  closeout_account(accounts[1]["pk"], accounts[1]["sk"], algod_client)
+    
 
 # utility for waiting on a transaction confirmation
 def wait_for_confirmation(client, transaction_id, timeout):
@@ -194,4 +235,12 @@ def print_asset_holding(algodclient, account, assetid):
             print(json.dumps(scrutinized_asset, indent=4))
             break
 
-create_non_fungible_token()
+if __name__ == '__main__':
+    qlets = {
+                'SDA_2021_St_Gallen': 'https://github.com/QuantLet/SDA_2021_St_Gallen',
+                'FRM_Crypto': 'https://github.com/QuantLet/FRM_Crypto',
+                'Hedging-Effectiveness-Plots': 'https://github.com/QuantLet/Hedging-Effectiveness-Plots'
+            }
+    for asset, url in qlets.items():
+        pdb.set_trace()
+        create_non_fungible_token(asset, url)
